@@ -1,0 +1,9 @@
+# Pinned to the same versions as the GLASS upstream env (Python 3.9.15).
+# imgaug 0.4.0 calls np.sctypes which was removed in NumPy 2.0, so numpy must
+# stay below 2.0; that in turn forces Python <= 3.11 (no <2.0 wheel for 3.13).
+torch==2.1.2
+torchvision==0.16.2
+numpy==1.26.3
+Pillow>=9.0
+opencv-python>=4.5
+imgaug==0.4.0

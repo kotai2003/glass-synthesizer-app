@@ -27,9 +27,7 @@ runs even with identical np/torch seeds.
 """
 from __future__ import annotations
 
-import os
-import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple
 
 import numpy as np
@@ -37,13 +35,7 @@ import PIL.Image
 import torch
 from torchvision import transforms
 
-
-_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_GLASS_ROOT = os.path.abspath(os.path.join(_THIS_DIR, os.pardir, os.pardir))
-if _GLASS_ROOT not in sys.path:
-    sys.path.insert(0, _GLASS_ROOT)
-
-from perlin import perlin_mask  # noqa: E402
+from ._vendored.perlin import perlin_mask
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
