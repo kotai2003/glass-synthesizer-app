@@ -1,15 +1,25 @@
 """
 Manual-screenshot helper.
 
-Launches the synthesizer GUI, drives it programmatically, and saves PNGs
-of the running window into ../../../00.docs/manual_screens/.
+Workspace-only utility: launches the synthesizer GUI, drives it
+programmatically, and saves PNGs of the running window into
+../../../00.docs/manual_screens/ for the user manual.
+
+This script ships in the standalone repo too (it lives under
+synthesizer_app/tests/, which is the subtree-split prefix), but it
+only works when run from the GLASS workspace where 00.docs/ exists
+and synthesizer_app is importable as a package. In the standalone
+repo, gui_main.py is at the repo root (no `synthesizer_app` package),
+and there is no 00.docs/ — so this script aborts early with a clear
+message.
 
 Run from GLASS/ with the glass_env interpreter:
 
     "C:/Users/seong/anaconda3/envs/glass_env/python.exe" \
         synthesizer_app/tests/_capture_manual_screens.py
 
-Not part of the user-facing test suite; this is a one-off doc utility.
+Not part of the user-facing test suite; the underscore prefix keeps
+unittest discover from picking it up.
 """
 from __future__ import annotations
 
@@ -18,11 +28,44 @@ import sys
 import time
 import tkinter as tk
 
-# Make `synthesizer_app...` importable when launched as a plain script.
+# Make `synthesizer_app...` importable when launched as a plain script
+# (only meaningful in the workspace; in the standalone repo there is no
+# `synthesizer_app` package directory at this level).
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _GLASS_ROOT = os.path.abspath(os.path.join(_HERE, os.pardir, os.pardir))
 if _GLASS_ROOT not in sys.path:
     sys.path.insert(0, _GLASS_ROOT)
+
+# Workspace layout sentinel: the manual lives at <workspace>/00.docs/.
+_REPO_ROOT = os.path.abspath(os.path.join(_GLASS_ROOT, os.pardir))
+_DOCS_DIR = os.path.join(_REPO_ROOT, "00.docs")
+
+
+def _abort_if_not_workspace():
+    """Refuse to run outside the GLASS workspace.
+
+    Prevents the standalone-repo case where _REPO_ROOT resolves to some
+    unrelated parent dir and we would (a) fail on `import synthesizer_app`
+    and (b) write screenshots to a surprising location.
+    """
+    if os.path.isdir(_DOCS_DIR) and os.path.isdir(
+            os.path.join(_GLASS_ROOT, "synthesizer_app")):
+        return
+    sys.stderr.write(
+        "[capture] This utility is workspace-only. It expects to run from\n"
+        "          <workspace>/GLASS/synthesizer_app/tests/_capture_manual_screens.py\n"
+        "          where <workspace>/00.docs/ exists. Detected layout:\n"
+        f"            _GLASS_ROOT = {_GLASS_ROOT}\n"
+        f"            _REPO_ROOT  = {_REPO_ROOT}\n"
+        "          The standalone glass-synthesizer-app repo does not\n"
+        "          contain 00.docs/ and lays out modules differently, so\n"
+        "          screenshots are managed from the parent workspace there.\n"
+        "          Aborting.\n"
+    )
+    sys.exit(2)
+
+
+_abort_if_not_workspace()
 
 from PIL import ImageGrab  # noqa: E402
 
@@ -30,8 +73,7 @@ from synthesizer_app.gui_main import GuiSynth  # noqa: E402
 
 
 # Output directory: <repo-root>/00.docs/manual_screens
-_REPO_ROOT = os.path.abspath(os.path.join(_GLASS_ROOT, os.pardir))
-OUT_DIR = os.path.join(_REPO_ROOT, "00.docs", "manual_screens")
+OUT_DIR = os.path.join(_DOCS_DIR, "manual_screens")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # Demo data on this workstation (see CLAUDE.md).
